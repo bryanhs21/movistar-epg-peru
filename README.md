@@ -1,41 +1,59 @@
 # EPG Telefónica Perú — todos los canales
 
-EPG XMLTV independiente de cualquier lista M3U.
+Generador XMLTV independiente de cualquier lista M3U.
 
-## Uso manual
+## Fuente
 
-No modifica ni necesita tu M3U. Puedes introducir la URL del EPG manualmente en tu aplicación IPTV.
+Utiliza directamente el endpoint de programación de Telefónica Perú.
 
-El proyecto genera `canales.csv` con:
+## 114 canales
 
-- Número de canal
-- Nombre
-- Call Letter
-- LiveChannelPid
-- XMLTV tvg-id
+El proyecto contiene los 114 `LiveChannelPid` proporcionados en las URLs `schedule`.
 
-El `tvg-id`/`channel id` utilizado es el `LiveChannelPid` de Telefónica. Esto mantiene una identificación estable y evita depender de nombres que pueden variar. XMLTV requiere que el `channel` de cada programa corresponda al `id` del canal. citeturn0search0
+## Cómo evita el HTTP 400
 
-Ejemplos:
+La API original proporcionada utiliza consultas de aproximadamente 10 canales y 24 horas.
 
-- L1 MAX → `lch7216`
-- L1 → `lch7217`
+Por ello el generador:
 
-## Archivos generados
+1. Divide los canales en grupos de máximo 10.
+2. Consulta la programación en bloques de 24 horas.
+3. Utiliza `offset=0,1000,2000...` si un bloque supera 1000 registros.
+4. Junta todos los resultados.
+5. Elimina duplicados por `Pid`.
+6. Genera `epg.xml` y `canales.csv`.
 
-- `epg.xml` → EPG completo
-- `canales.csv` → tabla para realizar la asignación manual
+Ventana temporal:
 
-## Actualización
+- 1 día hacia atrás.
+- 14 días hacia adelante.
 
-GitHub Actions consulta la API cada 6 horas.
+## Archivos
 
-Ventana:
-- 1 día hacia atrás
-- 14 días hacia adelante
+`epg.xml`
+: EPG XMLTV completo.
 
-Si la API no devuelve programación válida, el workflow falla y no publica un EPG vacío.
+`canales.csv`
+: tabla para asignación manual de los canales.
+
+Columnas:
+
+`channel_number, channel_name, call_letter, live_channel_pid, xmltv_tvg_id`
+
+Ejemplo:
+
+`14,L1MAX,LIGA 1 MAX,lch7216,lch7216`
+
+## M3U
+
+No modifica ni necesita una lista M3U.
+
+Puedes colocar el EPG manualmente en tu aplicación IPTV.
 
 ## URL prevista
 
 https://raw.githubusercontent.com/bryanhs21/limaxby-epg/refs/heads/main/epg.xml
+
+## Actualización
+
+GitHub Actions ejecuta el proceso cada 6 horas y permite ejecución manual.
